@@ -1,7 +1,8 @@
+require("dotenv").config()
 const Users = require("../models/Users.model")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const jwt_Secrety = "diallo21325684"
+const jwt_Secrety = process.env.jwt_Secrety
 
 
 

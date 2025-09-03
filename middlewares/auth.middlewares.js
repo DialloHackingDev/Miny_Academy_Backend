@@ -1,5 +1,6 @@
+require("dotenv").config()
 const jwt = require("jsonwebtoken");
-const jwt_Secrety = "diallo21325684";
+const jwt_Secrety = process.env.jwt_Secrety;
 
 async function authenfication(req, res, next) {
     const Aheader = req.header("Authorization");
