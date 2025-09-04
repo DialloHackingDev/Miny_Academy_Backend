@@ -1,25 +1,26 @@
-const mongoose = require("../config/db")
+const mongoose = require("../config/db");
 
-//la creation du schema user
+// Création du schema user
 const userSchema = mongoose.Schema({
-    username:{
-        type:String,
-        required:true
-    },
-    email:{
-        type:String,
-        required:true,
-        unique:true
-    },
-    password:{
-        type:String,
-        required:true
-    },
-    role:{
-        type:String,
-        emun:["admin","eleve","prof",{default:"eleve"}],
-        required:true
-    },
-})
+  username: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ["admin", "eleve", "prof"], // liste des rôles autorisés
+    default: "eleve",                  // valeur par défaut
+    required: true
+  }
+});
 
-module.exports = mongoose.model("User",userSchema);
+module.exports = mongoose.model("User", userSchema);
