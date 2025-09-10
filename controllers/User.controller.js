@@ -15,13 +15,13 @@ exports.UserRegister = async (req,res,next) =>{
         //le hash du password
         const salt = 10
         const hash = await bcrypt.hash(password,salt)
-        const newUser = await Users.create({
+        const newUser = new Users({
             username,
             email,
             password:hash,
-            role
+            role: role || "eleve" // Rôle par défaut : eleve
         })
-        newUser.save()
+        await newUser.save()
         return res.status(201).json(newUser)
 
     }catch(e){
@@ -34,26 +34,43 @@ exports.UserLogin = async (req,res,next) =>{
     try{
         const {email,password} = req.body
         const user = await Users.findOne({email})
-        if(!email) return res.status(401).json({msg:"👱‍♂️ n'est pas trouver!"})
+        if(!user) return res.status(401).json({msg:"Utilisateur non trouvé!"})
         
         
         //la verification du password
-        const verified = bcrypt.compare(password,user.password)
-        if(!verified) return res.status(401).json({msg:"le password est incorrect!"})
+        const verified = await bcrypt.compare(password,user.password)
+        if(!verified) return res.status(401).json({msg:"Mot de passe incorrect!"})
 
         //la creation du token
         const token = jwt.sign(
-            {userId:user._id,role:user.role},
+            {id:user._id,role:user.role},
             jwt_Secrety,
             {expiresIn:"12h"}
         );
+        //comment peut creer les cookies
+
+        res.cookie('token', token, {
+        httpOnly: false,  // empêche l'accès via JS côté client
+        secure: false,   // true si HTTPS
+        maxAge: 24 * 60 * 60 * 1000 // durée en ms (ici 1 jour)
+    });
         console.log(token)
-        return res.status(201).json({msg:"vous etes connecter!",token:token})
+         res.status(200).json({
+            msg:"vous etes connecter!",
+            token:token,
+            user:{
+                _id:user._id,
+                username:user.username,
+                email:user.email,
+                role:user.role
+            }
+        })
+        
 
 
     }catch(e){
-        console.log(e)
-        res.status(500).json({msg:"errure est :",e})
+        console.log("Erreur login backend:", e)
+        res.status(500).json({msg:"Erreur serveur lors de la connexion", error: e.message})
     }
 }
 
@@ -62,7 +79,7 @@ exports.UserProfil = async (req,res,next)=>{
 
     try{
         console.log("========",req.user)
-        const user = await Users.findById(req.user.userId).select("-password");
+        const user = await Users.findById(req.user.id).select("-password");
        
        console.log(user)
         if(!user)return res.status(401).json({msg:"aucun utilisateur n'est trouvé!"})

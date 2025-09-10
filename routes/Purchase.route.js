@@ -1,3 +1,4 @@
+//la parite purchase
 const express = require('express');
 const router = express.Router();
 const roleCheck = require('../middlewares/roleCheck');

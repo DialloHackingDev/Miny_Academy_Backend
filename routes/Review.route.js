@@ -1,13 +1,16 @@
+
+//la partie reviews
 const express = require('express');
 const router = express.Router();
-const roleCheck = require('../middlewares/roleCheck');
+const { authenticateToken, requireStudent } = require('../middlewares/auth');
 const reviewController = require('../controllers/Review.controller');
 const { body, validationResult } = require('express-validator');
 
 // Ajouter ou modifier un avis
 router.post(
 	'/:courseId',
-	roleCheck('student'),
+	authenticateToken,
+	requireStudent,
 	[
 		body('rating').isInt({ min: 1, max: 5 }).withMessage('La note doit être entre 1 et 5'),
 		body('comment').notEmpty().withMessage('Le commentaire est obligatoire')

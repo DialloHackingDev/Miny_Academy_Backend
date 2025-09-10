@@ -7,8 +7,9 @@ exports.createCourse = async (req, res) => {
     const { title, description, content, price, courseType, videoUrl } = req.body;
     
     // Validation du type de cours
+    console.log(courseType)
     if (!courseType || !['text', 'pdf', 'video'].includes(courseType)) {
-      return res.status(400).json({ 
+      return res.status(401).json({ 
         success: false, 
         message: 'Type de cours invalide. Types acceptés: text, pdf, video' 
       });
@@ -22,11 +23,13 @@ exports.createCourse = async (req, res) => {
       courseType,
       professor: req.user.id,
     };
+    console.log(req.body)
+    console.log(courseData)
 
     // Gérer le contenu selon le type
     if (courseType === 'text') {
       if (!content) {
-        return res.status(400).json({ 
+        return res.status(401).json({ 
           success: false, 
           message: 'Le contenu est obligatoire pour un cours de type texte' 
         });
@@ -34,7 +37,7 @@ exports.createCourse = async (req, res) => {
       courseData.content = content;
     } else if (courseType === 'pdf') {
       if (!req.files || !req.files.pdfFile) {
-        return res.status(400).json({ 
+        return res.status(401).json({ 
           success: false, 
           message: 'Un fichier PDF est obligatoire pour un cours de type PDF' 
         });
@@ -63,7 +66,7 @@ exports.createCourse = async (req, res) => {
         // URL vidéo externe
         courseData.videoUrl = videoUrl;
       } else {
-        return res.status(400).json({ 
+        return res.status(401).json({ 
           success: false, 
           message: 'Un fichier vidéo ou une URL vidéo est obligatoire pour un cours de type vidéo' 
         });

@@ -6,3 +6,4 @@ mongoose.connect(process.env.MB_url)
 .catch(e => console.log("la connection db echoué❌"))
 
 
+module.exports = mongoose;

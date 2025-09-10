@@ -25,6 +25,11 @@ const CourseSchema = new mongoose.Schema(
       default: 'text',
       required: true,
     },
+    //pour dire si un cour est gratuit ou non
+    isFree: {
+  type: Boolean,
+  default: false
+    },
     // Fichier PDF (si courseType = 'pdf')
     pdfFile: {
       filename: String,

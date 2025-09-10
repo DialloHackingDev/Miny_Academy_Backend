@@ -6,7 +6,7 @@
     // Dashboard étudiant
    exports.studentDashboard = async (req, res) => {
             const userId = req.user._id;
-            console.log(userId)
+            console.log("verification de l'utilisateur:",userId)
             const Course = require('../models/Cours.model');
             try {
                 // Récupérer les cours où l'étudiant est inscrit

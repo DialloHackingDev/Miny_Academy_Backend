@@ -1,8 +1,12 @@
+
+//la partie route des cours
 const coursControllers = require("../controllers/cours.controller");
 const router = require("express").Router();
 const { body, param, validationResult } = require('express-validator');
 const { authenticateToken, requireTeacher, requireStudent } = require("../middlewares/auth");
 const { uploadCourseFiles, cleanupFiles } = require("../middlewares/upload");
+const auth = require("../middlewares/auth.middlewares")
+const authentification = require("../middlewares/auth")
 
 
 // 🔹 Créer un cours (professeur ou admin)

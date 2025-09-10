@@ -4,54 +4,39 @@ const User = require('../models/Users.model');
 // Middleware pour vérifier le token JWT
 const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-    if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token d\'authentification requis' 
-      });
+    const Aheader = req.header("Authorization");
+    if (!Aheader) {
+      return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
     }
-
-    // Vérifier le token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Récupérer l'utilisateur
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Utilisateur non trouvé' 
-      });
+    const token = Aheader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
     }
-
-    // Ajouter l'utilisateur à la requête
+    
+    const decoded = jwt.verify(token, process.env.jwt_Secrety || 'your-secret-key');
+    const user = await User.findById(decoded.id).select('-password');
+    
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+    }
+    
     req.user = user;
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token invalide' 
-      });
+      return res.status(401).json({ success: false, message: 'Token invalide' });
     }
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Token expiré' 
-      });
+      return res.status(401).json({ success: false, message: 'Token expiré' });
     }
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Erreur d\'authentification' 
-    });
+    return res.status(500).json({ success: false, message: 'Erreur d\'authentification' });
   }
 };
 
 // Middleware pour vérifier si l'utilisateur est un professeur
 const requireTeacher = (req, res, next) => {
-  if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+  if (req.user.role !== 'prof' && req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false, 
       message: 'Accès refusé. Rôle professeur requis.' 
@@ -62,7 +47,7 @@ const requireTeacher = (req, res, next) => {
 
 // Middleware pour vérifier si l'utilisateur est un étudiant
 const requireStudent = (req, res, next) => {
-  if (req.user.role !== 'student' && req.user.role !== 'admin') {
+  if (req.user.role !== 'eleve' && req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false, 
       message: 'Accès refusé. Rôle étudiant requis.' 
@@ -113,10 +98,10 @@ const canModifyCourse = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  authenticateToken,
-  requireTeacher,
-  requireStudent,
+module.exports = { 
+  authenticateToken, 
+  requireTeacher, 
+  requireStudent, 
   requireAdmin,
   canModifyCourse
 };
