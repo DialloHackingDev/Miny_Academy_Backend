@@ -9,9 +9,11 @@ const { body, validationResult } = require('express-validator');
 
 // Dashboard étudiant
 router.get('/student', authenticateToken, roleCheck('eleve'), dashboardController.studentDashboard);
+router.get('/student/analytics', authenticateToken, roleCheck('eleve'), dashboardController.getStudentAnalytics);
 
 // Dashboard professeur
 router.get('/teacher', authenticateToken, roleCheck('prof'), dashboardController.teacherDashboard);
+router.get('/teacher/analytics', authenticateToken, roleCheck('prof'), dashboardController.getTeacherAnalytics);
 // Créer un cours
 router.post('/teacher/course', authenticateToken, roleCheck('prof'), dashboardController.createCourse);
 

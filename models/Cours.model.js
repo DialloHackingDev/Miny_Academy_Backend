@@ -74,6 +74,14 @@ const CourseSchema = new mongoose.Schema(
         ref: "User", // étudiants inscrits
       },
     ],
+    // Image de couverture du cours
+    coverImage: {
+      filename: String,
+      originalName: String,
+      path: String,
+      size: Number,
+      mimetype: String,
+    },
     // Statistiques du cours
     stats: {
       totalViews: { type: Number, default: 0 },

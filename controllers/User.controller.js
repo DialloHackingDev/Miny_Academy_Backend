@@ -2,7 +2,7 @@ require("dotenv").config()
 const Users = require("../models/Users.model")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-const jwt_Secrety = process.env.jwt_Secrety
+const JWT_SECRET = process.env.JWT_SECRET || process.env.jwt_Secrety
 
 
 
@@ -44,7 +44,7 @@ exports.UserLogin = async (req,res,next) =>{
         //la creation du token
         const token = jwt.sign(
             {id:user._id,role:user.role},
-            jwt_Secrety,
+            JWT_SECRET,
             {expiresIn:"12h"}
         );
         //comment peut creer les cookies

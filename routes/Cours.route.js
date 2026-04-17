@@ -12,9 +12,30 @@ const authentification = require("../middlewares/auth")
 // 🔹 Créer un cours (professeur ou admin)
 router.post(
 	"/",
+	(req, res, next) => {
+		console.log('\n\n=== POST /course - REQUEST RECEIVED ===');
+		console.log('Timestamp:', new Date().toISOString());
+		console.log('Content-Type:', req.headers['content-type']);
+		next();
+	},
 	authenticateToken,
 	requireTeacher,
-	uploadCourseFiles,
+	(req, res, next) => {
+		console.log('=== POST /course - BEFORE MULTER ===');
+		uploadCourseFiles(req, res, (err) => {
+			if (err) {
+				console.error('MULTER ERROR in POST:', err);
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Upload error: ' + err.message 
+				});
+			}
+			console.log('=== POST /course - MULTER SUCCESS ===');
+			console.log('Files:', req.files);
+			console.log('Body:', req.body);
+			next();
+		});
+	},
 	cleanupFiles,
 	[
 		body('title').notEmpty().withMessage('Le titre est obligatoire'),
@@ -23,8 +44,10 @@ router.post(
 		body('price').isNumeric().withMessage('Le prix doit être un nombre')
 	],
 	(req, res, next) => {
+		console.log('=== POST /course - VALIDATION ===');
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
+			console.log('Validation errors:', errors.array());
 			return res.status(400).json({ errors: errors.array() });
 		}
 		next();
@@ -65,7 +88,22 @@ router.put(
 	"/:id",
 	authenticateToken,
 	requireTeacher,
-	uploadCourseFiles,
+	(req, res, next) => {
+		console.log('=== BEFORE MULTER ===');
+		uploadCourseFiles(req, res, (err) => {
+			if (err) {
+				console.error('MULTER ERROR:', err);
+				return res.status(400).json({ 
+					success: false, 
+					message: 'Upload error: ' + err.message,
+					error: err.toString()
+				});
+			}
+			console.log('=== MULTER SUCCESS ===');
+			console.log('Files:', req.files);
+			next();
+		});
+	},
 	cleanupFiles,
 	coursControllers.updateCourse
 )

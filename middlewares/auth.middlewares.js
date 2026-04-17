@@ -1,6 +1,6 @@
 require("dotenv").config()
 const jwt = require("jsonwebtoken");
-const jwt_Secrety = process.env.jwt_Secrety;
+const JWT_SECRET = process.env.JWT_SECRET || process.env.jwt_Secrety;
 
 async function authenfication(req, res, next) {
     const Aheader = req.header("Authorization");
@@ -16,7 +16,7 @@ async function authenfication(req, res, next) {
 
     try {
         // Vérification du token
-        const verified = jwt.verify(token, jwt_Secrety);
+        const verified = jwt.verify(token, JWT_SECRET);
 
         // On stocke l'utilisateur vérifié dans req.user
         req.user = verified;

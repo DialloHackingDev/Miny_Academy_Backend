@@ -14,7 +14,7 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
     }
     
-    const decoded = jwt.verify(token, process.env.jwt_Secrety || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.jwt_Secrety || 'your-secret-key');
     const user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
@@ -36,6 +36,10 @@ const authenticateToken = async (req, res, next) => {
 
 // Middleware pour vérifier si l'utilisateur est un professeur
 const requireTeacher = (req, res, next) => {
+  console.log('=== REQUIRE TEACHER ===');
+  console.log('User:', req.user);
+  console.log('User role:', req.user?.role);
+  
   if (req.user.role !== 'prof' && req.user.role !== 'admin') {
     return res.status(403).json({ 
       success: false, 

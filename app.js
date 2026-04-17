@@ -23,6 +23,13 @@ const PORT =process.env.PORT || 3000;
 
 
 
+// Middleware de logging personnalisé (avant tout)
+app.use((req, res, next) => {
+    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    next();
+});
+
 //les middlewares
 app.use(express.json())
 app.use(cookie())
@@ -55,6 +62,11 @@ app.use("/api/notifications", notificationRoute);
 app.use("/api/users/profile", profileRoute);
 
 
+
+// Endpoint healthcheck pour Docker
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 // app.get("/",(req,res)=>{
 //     res.send("bienvenue dans la formation nodejs")

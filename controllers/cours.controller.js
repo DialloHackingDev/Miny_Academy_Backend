@@ -4,11 +4,18 @@ const { deleteFile } = require("../middlewares/upload");
 // 🔹 Créer un cours (professeur ou admin)
 exports.createCourse = async (req, res) => {
   try {
+    console.log('=== CREATE COURSE CONTROLLER ===');
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files);
+    console.log('req.user:', req.user);
+    
     const { title, description, content, price, courseType, videoUrl } = req.body;
     
+    console.log('Extracted values:', { title, description, content, price, courseType, videoUrl });
+    
     // Validation du type de cours
-    console.log(courseType)
     if (!courseType || !['text', 'pdf', 'video'].includes(courseType)) {
+      console.log('Invalid courseType:', courseType);
       return res.status(401).json({ 
         success: false, 
         message: 'Type de cours invalide. Types acceptés: text, pdf, video' 
@@ -21,7 +28,7 @@ exports.createCourse = async (req, res) => {
       description,
       price: parseFloat(price) || 0,
       courseType,
-      professor: req.user.id,
+      professor: req.user._id,
     };
     console.log(req.body)
     console.log(courseData)
@@ -73,6 +80,18 @@ exports.createCourse = async (req, res) => {
       }
     }
 
+    // Gérer l'image de couverture
+    if (req.files && req.files.coverImage) {
+      const coverImage = req.files.coverImage[0];
+      courseData.coverImage = {
+        filename: coverImage.filename,
+        originalName: coverImage.originalname,
+        path: coverImage.path,
+        size: coverImage.size,
+        mimetype: coverImage.mimetype,
+      };
+    }
+
     const course = await Course.create(courseData);
 
     res.status(201).json({ 
@@ -81,6 +100,10 @@ exports.createCourse = async (req, res) => {
       data: course 
     });
   } catch (error) {
+    console.error('=== CREATE COURSE ERROR ===');
+    console.error('Error:', error);
+    console.error('Stack:', error.stack);
+    
     // Nettoyer les fichiers en cas d'erreur
     if (req.files) {
       Object.values(req.files).forEach(files => {
@@ -92,7 +115,8 @@ exports.createCourse = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      message: error.message 
+      message: error.message,
+      stack: error.stack 
     });
   }
 };
@@ -163,15 +187,33 @@ exports.getCourseById = async (req, res) => {
 // 🔹 Modifier un cours (professeur ou admin)
 exports.updateCourse = async (req, res) => {
   try {
+    console.log('=== UPDATE COURSE ===');
+    console.log('Course ID:', req.params.id);
+    console.log('User:', req.user);
+    console.log('Body:', req.body);
+    console.log('Files:', req.files);
+    
     const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: "Cours non trouvé" });
 
     // Vérification : seul le prof ou admin peut modifier
-    if (course.professor.toString() !== req.user.id && req.user.role !== "admin") {
+    const userId = req.user._id ? req.user._id.toString() : req.user.id;
+    console.log('Comparing professor:', course.professor.toString(), 'with user:', userId);
+    if (course.professor.toString() !== userId && req.user.role !== "admin") {
       return res.status(403).json({ message: "Accès refusé" });
     }
 
     const { title, description, content, price, courseType, videoUrl } = req.body;
+    console.log('Extracted values:', { title, description, content, price, courseType, videoUrl });
+    
+    // Validation du courseType
+    const validCourseTypes = ['text', 'pdf', 'video'];
+    if (courseType && !validCourseTypes.includes(courseType)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Type de cours invalide. Valeurs acceptées: ${validCourseTypes.join(', ')}` 
+      });
+    }
     
     // Mettre à jour les champs de base
     course.title = title || course.title;
@@ -275,9 +317,30 @@ exports.updateCourse = async (req, res) => {
       }
     }
 
+    // Gérer l'image de couverture
+    if (req.files && req.files.coverImage) {
+      // Supprimer l'ancienne image de couverture s'il existe
+      if (course.coverImage && course.coverImage.path) {
+        deleteFile(course.coverImage.path);
+      }
+      
+      const coverImage = req.files.coverImage[0];
+      course.coverImage = {
+        filename: coverImage.filename,
+        originalName: coverImage.originalname,
+        path: coverImage.path,
+        size: coverImage.size,
+        mimetype: coverImage.mimetype,
+      };
+    }
+
+    console.log('Saving course:', course);
     await course.save();
+    console.log('Course saved successfully');
     res.json({ success: true, message: 'Cours modifié avec succès', data: course });
   } catch (error) {
+    console.error('Error in updateCourse:', error);
+    
     // Nettoyer les fichiers en cas d'erreur
     if (req.files) {
       Object.values(req.files).forEach(files => {
@@ -287,7 +350,7 @@ exports.updateCourse = async (req, res) => {
       });
     }
     
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message, stack: error.stack });
   }
 };
 
@@ -297,7 +360,8 @@ exports.deleteCourse = async (req, res) => {
     const course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: "Cours non trouvé" });
 
-    if (course.professor.toString() !== req.user.id && req.user.role !== "admin") {
+    const userId = req.user._id ? req.user._id.toString() : req.user.id;
+    if (course.professor.toString() !== userId && req.user.role !== "admin") {
       return res.status(403).json({ message: "Accès refusé" });
     }
 
@@ -307,6 +371,9 @@ exports.deleteCourse = async (req, res) => {
     }
     if (course.videoFile && course.videoFile.path) {
       deleteFile(course.videoFile.path);
+    }
+    if (course.coverImage && course.coverImage.path) {
+      deleteFile(course.coverImage.path);
     }
 
     await Course.findByIdAndDelete(req.params.id);
@@ -323,11 +390,11 @@ exports.enrollCourse = async (req, res) => {
     if (!course) return res.status(404).json({ message: "Cours non trouvé" });
 
     // Vérifie si l'étudiant est déjà inscrit
-    if (course.students.includes(req.user.id)) {
+    if (course.students.includes(req.user._id)) {
       return res.status(400).json({ message: "Déjà inscrit à ce cours" });
     }
 
-    course.students.push(req.user.id);
+    course.students.push(req.user._id);
     await course.save();
 
     res.json({ success: true, message: "Inscription réussie", data: course });
@@ -345,7 +412,7 @@ exports.downloadCourseFile = async (req, res) => {
     }
 
     // Vérifier si l'étudiant est inscrit au cours
-    if (!course.students.includes(req.user.id)) {
+    if (!course.students.includes(req.user._id)) {
       return res.status(403).json({ 
         success: false, 
         message: "Vous devez être inscrit à ce cours pour télécharger les fichiers" 
@@ -386,7 +453,8 @@ exports.getCourseStats = async (req, res) => {
     }
 
     // Vérifier si l'utilisateur est le professeur du cours ou un admin
-    if (course.professor.toString() !== req.user.id && req.user.role !== "admin") {
+    const userId = req.user._id ? req.user._id.toString() : req.user.id;
+    if (course.professor.toString() !== userId && req.user.role !== "admin") {
       return res.status(403).json({ 
         success: false, 
         message: "Accès refusé. Vous ne pouvez voir que les statistiques de vos propres cours." 

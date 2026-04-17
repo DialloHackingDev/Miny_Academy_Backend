@@ -1,0 +1,20 @@
+# Dockerfile simplifié sans multi-stage build (pour test)
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copier package.json et installer les dépendances
+COPY package.json ./
+RUN npm install && npm cache clean --force
+
+# Copier tous les fichiers source
+COPY . .
+
+# Créer le dossier uploads
+RUN mkdir -p /app/uploads
+
+# Exposer le port
+EXPOSE 5000
+
+# Lancer le serveur
+CMD ["node", "app.js"]

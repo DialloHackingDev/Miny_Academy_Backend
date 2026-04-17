@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
       subDir = 'pdfs';
     } else if (file.fieldname === 'videoFile') {
       subDir = 'videos';
+    } else if (file.fieldname === 'coverImage') {
+      subDir = 'covers';
     }
     
     const finalDir = path.join(uploadDir, subDir);
@@ -43,6 +45,14 @@ const fileFilter = (req, file, cb) => {
       cb(null, true);
     } else {
       cb(new Error('Seuls les fichiers PDF sont acceptés'), false);
+    }
+  } else if (file.fieldname === 'coverImage') {
+    // Accepter les images
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format d\'image non supporté. Formats acceptés: JPEG, PNG, GIF, WEBP'), false);
     }
   } else if (file.fieldname === 'videoFile') {
     // Accepter les formats vidéo courants
@@ -71,21 +81,27 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB max
-    files: 2 // Maximum 2 fichiers (PDF + vidéo)
+    files: 3 // Maximum 3 fichiers (PDF + vidéo + coverImage)
   }
 });
 
 // Middleware pour l'upload de cours
 const uploadCourseFiles = upload.fields([
   { name: 'pdfFile', maxCount: 1 },
-  { name: 'videoFile', maxCount: 1 }
+  { name: 'videoFile', maxCount: 1 },
+  { name: 'coverImage', maxCount: 1 }
 ]);
 
 // Middleware pour nettoyer les fichiers en cas d'erreur
 const cleanupFiles = (req, res, next) => {
+  console.log('=== CLEANUP FILES ===');
+  console.log('req.files:', req.files);
+  console.log('req.body:', req.body);
+  
   // Si des fichiers ont été uploadés mais qu'il y a une erreur
   if (req.files) {
     req.on('error', () => {
+      console.log('Request error - cleaning up files');
       // Nettoyer les fichiers uploadés en cas d'erreur
       Object.values(req.files).forEach(files => {
         files.forEach(file => {
