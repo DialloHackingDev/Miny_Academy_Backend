@@ -36,8 +36,16 @@ app.use(cookie())
 app.use(morgan("dev"))
 app.use(helmet());
 app.use(cors({
-    origin: ["http://localhost:5173"], // à adapter selon le front
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    origin: [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:42157",
+        "http://localhost:42157",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true
 }));
 app.use(rateLimit({
@@ -47,8 +55,14 @@ app.use(rateLimit({
     legacyHeaders: false,
 }))
 
-// Exposer les fichiers uploadés (PDFs/Vidéos) de façon statique
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Exposer les fichiers uploadés (PDFs/Vidéos) de façon statique avec CORS headers
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res, path) => {
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+        res.set("Cross-Origin-Resource-Policy", "cross-origin");
+    }
+}));
 
 
 //les api 
