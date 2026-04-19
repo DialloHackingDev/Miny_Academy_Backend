@@ -9,6 +9,7 @@ const progressionRoute = require("./routes/Progression.route");
 const reviewRoute = require("./routes/Review.route");
 const purchaseRoute = require("./routes/Purchase.route");
 const notificationRoute = require("./routes/Notification.route");
+const cartRoute = require("./routes/Cart.route");
 const profileRoute = require("./routes/Profile.route");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -17,7 +18,7 @@ const rateLimit = require("express-rate-limit");
 const path = require("path");
 const app = express();
 
-const PORT =process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 
 
@@ -39,6 +40,10 @@ app.use(cors({
     origin: [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5175",
         "http://127.0.0.1:42157",
         "http://localhost:42157",
         "http://localhost:3000",
@@ -73,6 +78,7 @@ app.use("/api/progress", progressionRoute);
 app.use("/api/reviews", reviewRoute);
 app.use("/api/purchase", purchaseRoute);
 app.use("/api/notifications", notificationRoute);
+app.use("/api/cart", cartRoute);
 app.use("/api/users/profile", profileRoute);
 
 
@@ -87,6 +93,6 @@ app.get("/health", (req, res) => {
 // });
 
 
-app.listen(PORT,()=>{
-    console.log(`le server ecoute sur le port ${PORT}`)
-})
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Le serveur écoute sur http://0.0.0.0:${PORT} ✅`);
+});

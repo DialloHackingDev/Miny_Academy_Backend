@@ -19,6 +19,8 @@ const storage = multer.diskStorage({
       subDir = 'videos';
     } else if (file.fieldname === 'coverImage') {
       subDir = 'covers';
+    } else if (file.fieldname === 'profileImage') {
+      subDir = 'profiles';
     }
     
     const finalDir = path.join(uploadDir, subDir);
@@ -81,16 +83,15 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB max
-    files: 3 // Maximum 3 fichiers (PDF + vidéo + coverImage)
+    files: 20 // Permettre jusqu'à 20 fichiers par cours (leçons incluses)
   }
 });
 
-// Middleware pour l'upload de cours
-const uploadCourseFiles = upload.fields([
-  { name: 'pdfFile', maxCount: 1 },
-  { name: 'videoFile', maxCount: 1 },
-  { name: 'coverImage', maxCount: 1 }
-]);
+// Middleware pour l'upload de cours (flexible)
+const uploadCourseFiles = upload.any();
+
+// Middleware pour l'upload d'image de profil
+const uploadProfileImage = upload.single('profileImage');
 
 // Middleware pour nettoyer les fichiers en cas d'erreur
 const cleanupFiles = (req, res, next) => {
@@ -126,6 +127,7 @@ const deleteFile = (filePath) => {
 
 module.exports = {
   uploadCourseFiles,
+  uploadProfileImage,
   cleanupFiles,
   deleteFile
 };

@@ -14,7 +14,8 @@ exports.getUserProfile = async (req, res) => {
         
         res.json(user);
     } catch (err) {
-        res.status(500).json({ message: 'Erreur lors de la récupération du profil', error: err.message });
+        console.error('❌ Erreur récupération profil:', err);
+        res.status(500).json({ message: 'Erreur lors de la récupération du profil', error: err.message, stack: err.stack });
     }
 };
 
@@ -22,7 +23,11 @@ exports.getUserProfile = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { username, email, currentPassword, newPassword } = req.body;
+        // Accepter tous les champs envoyés par le frontend
+        const { username, email, currentPassword, newPassword, bio, notifications, darkMode } = req.body;
+        
+        console.log('🔧 Mise à jour profil - UserID:', userId);
+        console.log('🔧 Données reçues:', req.body);
         
         const user = await User.findById(userId);
         if (!user) {
@@ -32,6 +37,14 @@ exports.updateUserProfile = async (req, res) => {
         // Mise à jour des champs de base
         if (username) user.username = username;
         if (email) user.email = email;
+        if (bio !== undefined) user.bio = bio;
+        if (notifications !== undefined) user.notifications = notifications;
+        if (darkMode !== undefined) user.darkMode = darkMode;
+        
+        // Gestion de l'image de profil si fournie
+        if (req.file) {
+            user.profileImage = req.file.filename;
+        }
         
         // Si l'utilisateur souhaite changer son mot de passe
         if (currentPassword && newPassword) {
@@ -52,6 +65,12 @@ exports.updateUserProfile = async (req, res) => {
         const updatedUser = await User.findById(userId).select('-password');
         res.json({ message: 'Profil mis à jour avec succès', user: updatedUser });
     } catch (err) {
-        res.status(500).json({ message: 'Erreur lors de la mise à jour du profil', error: err.message });
+        console.error('❌ Erreur mise à jour profil:', err);
+        console.error('❌ Stack trace:', err.stack);
+        res.status(500).json({ 
+            message: 'Erreur lors de la mise à jour du profil', 
+            error: err.message,
+            stack: err.stack 
+        });
     }
 };

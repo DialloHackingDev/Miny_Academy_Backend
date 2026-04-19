@@ -4,21 +4,41 @@ const User = require('../models/Users.model');
 // Middleware pour vérifier le token JWT
 const authenticateToken = async (req, res, next) => {
   try {
-    const Aheader = req.header("Authorization");
-    if (!Aheader) {
-      return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
+    // 1. Essayer de récupérer le token depuis le header Authorization
+    const authHeader = req.header("Authorization");
+    let token = authHeader && authHeader.split(" ")[1];
+
+    // 2. Si pas de token dans le header, essayer de le récupérer depuis le cookie
+    if (!token && req.cookies) {
+      token = req.cookies.token;
     }
-    
-    const token = Aheader.split(" ")[1];
+
     if (!token) {
-      return res.status(401).json({ success: false, message: 'Token d\'authentification requis' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token d\'authentification requis' 
+      });
     }
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.jwt_Secrety || 'your-secret-key');
+    // Utiliser la clé secrète (priorité aux variables d'environnement)
+    const secret = process.env.JWT_SECRET || process.env.jwt_Secrety;
+    
+    if (!secret && process.env.NODE_ENV === 'production') {
+      console.error("CRITICAL: JWT_SECRET non défini en production !");
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Erreur de configuration serveur' 
+      });
+    }
+
+    const decoded = jwt.verify(token, secret || 'your-secret-key');
     const user = await User.findById(decoded.id).select('-password');
     
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Utilisateur non authentifié' });
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Utilisateur non authentifié' 
+      });
     }
     
     req.user = user;
@@ -30,6 +50,7 @@ const authenticateToken = async (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ success: false, message: 'Token expiré' });
     }
+    console.error("Erreur Auth Middleware:", error);
     return res.status(500).json({ success: false, message: 'Erreur d\'authentification' });
   }
 };

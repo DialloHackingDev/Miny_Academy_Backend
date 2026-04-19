@@ -2,12 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middlewares/auth');
-const profileController = require('../controllers/Profile.controller');
+const { uploadProfileImage } = require('../middlewares/upload');
+const ProfileController = require('../controllers/Profile.controller');
 
 // Récupérer le profil de l'utilisateur connecté
-router.get('/', authenticateToken, profileController.getUserProfile);
+router.get('/', authenticateToken, ProfileController.getUserProfile);
 
-// Mettre à jour le profil de l'utilisateur
-router.put('/', authenticateToken, profileController.updateUserProfile);
+// Mettre à jour le profil de l'utilisateur (avec upload d'image optionnel)
+router.put('/', authenticateToken, uploadProfileImage, ProfileController.updateUserProfile);
 
 module.exports = router;

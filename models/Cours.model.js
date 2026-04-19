@@ -30,6 +30,24 @@ const CourseSchema = new mongoose.Schema(
   type: Boolean,
   default: false
     },
+    // 🎯 Catégorie du cours
+    category: {
+      type: String,
+      enum: [
+        'Développement Web',
+        'Développement Mobile',
+        'Data Science',
+        'IA & Machine Learning',
+        'DevOps & Cloud',
+        'Conception & UI/UX',
+        'Marketing Digital',
+        'Gestion de Projet',
+        'Langue & Communication',
+        'Autre'
+      ],
+      default: 'Autre',
+      required: true
+    },
     // Fichier PDF (si courseType = 'pdf')
     pdfFile: {
       filename: String,
@@ -89,6 +107,42 @@ const CourseSchema = new mongoose.Schema(
       averageRating: { type: Number, default: 0 },
       totalReviews: { type: Number, default: 0 },
     },
+    // Modules et leçons du cours
+    modules: [{
+      _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+      title: { type: String, required: true },
+      description: { type: String },
+      order: { type: Number, default: 0 },
+      lessons: [{
+        _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
+        title: { type: String, required: true },
+        description: { type: String },
+        type: { 
+          type: String, 
+          enum: ['video', 'text', 'pdf', 'quiz'],
+          default: 'video'
+        },
+        content: { type: String }, // Pour le contenu texte
+        videoUrl: { type: String }, // URL vidéo externe
+        videoFile: {
+          filename: String,
+          originalName: String,
+          path: String,
+          size: Number,
+          mimetype: String,
+        },
+        pdfFile: {
+          filename: String,
+          originalName: String,
+          path: String,
+          size: Number,
+          mimetype: String,
+        },
+        duration: { type: Number, default: 0 }, // Durée en minutes
+        order: { type: Number, default: 0 },
+        isFree: { type: Boolean, default: false }, // Leçon gratuite (aperçu)
+      }]
+    }],
   },
   { timestamps: true }
 );

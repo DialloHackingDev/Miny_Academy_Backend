@@ -20,6 +20,26 @@ const userSchema = mongoose.Schema({
     enum: ["admin", "eleve", "prof"], // liste des rôles autorisés
     default: "eleve",                  // valeur par défaut
     required: true
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  jobTitle: {
+    type: String,
+    default: ''
+  },
+  profileImage: {
+    type: String,
+    default: ''
+  },
+  notifications: {
+    type: Boolean,
+    default: true
+  },
+  darkMode: {
+    type: Boolean,
+    default: false
   }
 });
 

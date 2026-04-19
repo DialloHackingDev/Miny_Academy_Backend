@@ -5,8 +5,6 @@ const router = require("express").Router();
 const { body, param, validationResult } = require('express-validator');
 const { authenticateToken, requireTeacher, requireStudent } = require("../middlewares/auth");
 const { uploadCourseFiles, cleanupFiles } = require("../middlewares/upload");
-const auth = require("../middlewares/auth.middlewares")
-const authentification = require("../middlewares/auth")
 
 
 // 🔹 Créer un cours (professeur ou admin)
@@ -55,11 +53,10 @@ router.post(
 	coursControllers.createCourse
 )
 
-// 🔹 Inscription à un cours (étudiant)
+// 🔹 Inscription à un cours (tous les utilisateurs authentifiés)
 router.post(
 	"/:id/enroll",
 	authenticateToken,
-	requireStudent,
 	[
 		param('id').isMongoId().withMessage('ID du cours invalide')
 	],
@@ -142,11 +139,10 @@ router.delete(
 
 
 
-// 🔹 Télécharger un fichier de cours (étudiant inscrit)
+// 🔹 Télécharger un fichier de cours (utilisateur inscrit)
 router.get(
 	"/:id/download/:fileType",
 	authenticateToken,
-	requireStudent,
 	[
 		param('id').isMongoId().withMessage('ID du cours invalide'),
 		param('fileType').isIn(['pdf', 'video']).withMessage('Type de fichier invalide')

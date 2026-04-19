@@ -10,6 +10,7 @@ router.post("/login",userControllers.UserLogin)
 
 //la route pour la connection de l'utilisateur
 router.get("/profile", authenticateToken, userControllers.UserProfil)
+router.put("/profile", authenticateToken, userControllers.UpdateProfile)
 
 
 module.exports = router;

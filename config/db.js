@@ -21,6 +21,9 @@ const connectDB = async () => {
     }
 };
 
-connectDB();
+// ✅ Ne pas connecter pendant les tests
+if (process.env.NODE_ENV !== 'test') {
+    connectDB();
+}
 
 module.exports = mongoose;
