@@ -23,6 +23,9 @@ router.put('/teacher/course/:id', authenticateToken, roleCheck('prof'), dashboar
 // Supprimer un cours
 router.delete('/teacher/course/:id', authenticateToken, roleCheck('prof'), dashboardController.deleteCourse);
 
+// Retirer un élève d'un cours
+router.delete('/teacher/course/:courseId/student/:studentId', authenticateToken, roleCheck('prof'), dashboardController.removeStudentFromCourse);
+
 // Dashboard admin
 router.get('/admin', authenticateToken, roleCheck('admin'), dashboardController.adminDashboard);
 

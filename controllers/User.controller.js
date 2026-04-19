@@ -216,14 +216,26 @@ exports.UserProfil = async (req,res,next)=>{
 exports.UpdateProfile = async (req, res) => {
     try {
         const userId = req.user.id || req.user._id;
-        const { username, bio, jobTitle, notifications, darkMode } = req.body;
+        const { username, email, bio, jobTitle, notifications, darkMode } = req.body;
 
         const updateData = {};
         if (username) updateData.username = username.trim();
+        if (email) updateData.email = email.toLowerCase().trim();
         if (bio !== undefined) updateData.bio = bio.trim();
         if (jobTitle !== undefined) updateData.jobTitle = jobTitle.trim();
         if (notifications !== undefined) updateData.notifications = notifications;
         if (darkMode !== undefined) updateData.darkMode = darkMode;
+
+        // Si l'email est modifié, vérifier s'il est déjà pris
+        if (email) {
+            const existingUser = await Users.findOne({ email: updateData.email, _id: { $ne: userId } });
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    msg: "Cet email est déjà utilisé par un autre compte"
+                });
+            }
+        }
 
         const user = await Users.findByIdAndUpdate(
             userId,

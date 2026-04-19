@@ -28,7 +28,7 @@
             } catch (err) {
                 res.status(500).json({ message: 'Erreur dashboard étudiant', error: err.message });
             }
-    },
+    }
 
     // Analytics étudiant
     exports.getStudentAnalytics = async (req, res) => {
@@ -69,7 +69,7 @@
         } catch (err) {
             res.status(500).json({ success: false, message: 'Erreur analytics étudiant', error: err.message });
         }
-    },
+    }
 
     // Dashboard professeur
     exports.teacherDashboard = async (req, res) => {
@@ -96,7 +96,7 @@
             } catch (err) {
                 res.status(500).json({ message: 'Erreur dashboard professeur', error: err.message });
             }
-    },
+    }
 
     // Dashboard admin
         exports.adminDashboard = async (req, res) => {
@@ -115,7 +115,7 @@
             } catch (err) {
                 res.status(500).json({ message: 'Erreur dashboard admin', error: err.message });
             }
-        },
+        }
 
         // Créer un cours (professeur)
         exports.createCourse = async (req, res) => {
@@ -135,7 +135,7 @@
             } catch (err) {
                 res.status(500).json({ message: 'Erreur création cours', error: err.message });
             }
-        },
+        }
 
         // Modifier un cours (professeur)
         exports.updateCourse = async (req, res) => {
@@ -157,7 +157,7 @@
             } catch (err) {
                 res.status(500).json({ message: 'Erreur modification cours', error: err.message });
             }
-        },
+        }
 
         // Supprimer un cours (professeur)
         exports.deleteCourse = async (req, res) => {
@@ -175,7 +175,31 @@
                 res.status(500).json({ message: 'Erreur suppression cours', error: err.message });
             }
         }
-    ,
+    
+        // Retirer un élève d'un cours (professeur)
+        exports.removeStudentFromCourse = async (req, res) => {
+            const Course = require('../models/Cours.model');
+            try {
+                const { courseId, studentId } = req.params;
+                const course = await Course.findById(courseId);
+                
+                if (!course) return res.status(404).json({ message: 'Cours non trouvé' });
+                
+                // Vérifier si c'est bien le professeur du cours
+                if (String(course.professor) !== String(req.user._id)) {
+                    return res.status(403).json({ message: 'Accès interdit' });
+                }
+                
+                // Retirer l'élève
+                course.students = course.students.filter(id => String(id) !== String(studentId));
+                await course.save();
+                
+                res.json({ success: true, message: 'Élève retiré du cours avec succès' });
+            } catch (err) {
+                res.status(500).json({ success: false, message: 'Erreur lors du retrait de l\'élève', error: err.message });
+            }
+        }
+    
             // ADMIN : Ajouter un utilisateur
             exports.createUser = async (req, res) => {
                 const User = require('../models/Users.model');
@@ -187,7 +211,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur création utilisateur', error: err.message });
                 }
-            },
+            }
 
             // ADMIN : Modifier un utilisateur
             exports.updateUser = async (req, res) => {
@@ -205,7 +229,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur modification utilisateur', error: err.message });
                 }
-            },
+            }
 
             // ADMIN : Désactiver un utilisateur
             exports.disableUser = async (req, res) => {
@@ -220,7 +244,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur désactivation utilisateur', error: err.message });
                 }
-            },
+            }
 
             // ADMIN : Supprimer un utilisateur
             exports.deleteUser = async (req, res) => {
@@ -234,7 +258,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur suppression utilisateur', error: err.message });
                 }
-            },
+            }
 
             // ADMIN : Modifier un cours
             exports.updateCourseAdmin = async (req, res) => {
@@ -254,7 +278,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur modification cours', error: err.message });
                 }
-            },
+            }
 
             // ADMIN : Supprimer un cours
             exports.deleteCourseAdmin = async (req, res) => {
@@ -268,7 +292,7 @@
                 } catch (err) {
                     res.status(500).json({ message: 'Erreur suppression cours', error: err.message });
                 }
-            },
+            }
 
             // Analytics professeur
             exports.getTeacherAnalytics = async (req, res) => {

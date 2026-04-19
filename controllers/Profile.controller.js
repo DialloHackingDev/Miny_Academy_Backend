@@ -24,7 +24,7 @@ exports.updateUserProfile = async (req, res) => {
     try {
         const userId = req.user._id;
         // Accepter tous les champs envoyés par le frontend
-        const { username, email, currentPassword, newPassword, bio, notifications, darkMode } = req.body;
+        const { username, email, currentPassword, newPassword, bio, jobTitle, notifications, darkMode } = req.body;
         
         console.log('🔧 Mise à jour profil - UserID:', userId);
         console.log('🔧 Données reçues:', req.body);
@@ -38,6 +38,7 @@ exports.updateUserProfile = async (req, res) => {
         if (username) user.username = username;
         if (email) user.email = email;
         if (bio !== undefined) user.bio = bio;
+        if (jobTitle !== undefined) user.jobTitle = jobTitle;
         if (notifications !== undefined) user.notifications = notifications;
         if (darkMode !== undefined) user.darkMode = darkMode;
         
@@ -63,7 +64,7 @@ exports.updateUserProfile = async (req, res) => {
         
         // Renvoyer l'utilisateur sans le mot de passe
         const updatedUser = await User.findById(userId).select('-password');
-        res.json({ message: 'Profil mis à jour avec succès', user: updatedUser });
+        res.json({ success: true, message: 'Profil mis à jour avec succès', user: updatedUser });
     } catch (err) {
         console.error('❌ Erreur mise à jour profil:', err);
         console.error('❌ Stack trace:', err.stack);
