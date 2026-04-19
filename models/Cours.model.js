@@ -69,7 +69,7 @@ const CourseSchema = new mongoose.Schema(
       type: String,
       validate: {
         validator: function(v) {
-          if (this.courseType === 'video' && !this.videoFile.filename) {
+          if (this.courseType === 'video' && (!this.videoFile || !this.videoFile.filename)) {
             return v && v.length > 0;
           }
           return true;
