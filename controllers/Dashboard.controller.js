@@ -134,15 +134,67 @@
         exports.adminDashboard = async (req, res) => {
             const User = require('../models/Users.model');
             const Course = require('../models/Cours.model');
+            const Purchase = require('../models/Purchase.model');
+            const Progression = require('../models/Progression.model');
             try {
-                const users = await User.find().select('username email role');
+                const users = await User.find().select('username email role createdAt disabled');
                 const courses = await Course.find()
-                    .select('title description content price professor students')
-                    .populate('professor', 'username email')
-                    .populate('students', 'username email');
+                    .select('title description price professor students category courseType createdAt coverImage')
+                    .populate('professor', 'username email');
+
+                // Revenue & purchase stats
+                const purchases = await Purchase.find({ paymentStatus: 'paid' })
+                    .populate('userId', 'username email')
+                    .populate('courseId', 'title price')
+                    .sort({ createdAt: -1 })
+                    .limit(20);
+                
+                const totalRevenue = purchases.reduce((sum, p) => sum + (p.price || 0), 0);
+
+                // Certificates earned
+                const progressions = await Progression.find({ certificateEarned: true });
+                const totalCertificates = progressions.length;
+
+                // Counts
+                const totalStudents = users.filter(u => u.role === 'eleve').length;
+                const totalProfessors = users.filter(u => u.role === 'prof').length;
+                const totalCourses = courses.length;
+
+                // Monthly revenue (last 6 months)
+                const now = new Date();
+                const monthlyRevenue = [];
+                for (let i = 5; i >= 0; i--) {
+                    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+                    const rev = purchases
+                        .filter(p => p.createdAt >= start && p.createdAt <= end)
+                        .reduce((sum, p) => sum + (p.price || 0), 0);
+                    monthlyRevenue.push({ 
+                        month: start.toLocaleDateString('fr-FR', { month: 'short' }), 
+                        revenue: rev 
+                    });
+                }
+
+                // Top courses by students
+                const topCourses = [...courses]
+                    .sort((a, b) => (b.students?.length || 0) - (a.students?.length || 0))
+                    .slice(0, 5)
+                    .map(c => ({ _id: c._id, title: c.title, students: c.students?.length || 0, revenue: (c.price || 0) * (c.students?.length || 0) }));
+
                 res.json({
                     users,
-                    courses
+                    courses,
+                    purchases: purchases.slice(0, 10),
+                    stats: {
+                        totalUsers: users.length,
+                        totalStudents,
+                        totalProfessors,
+                        totalCourses,
+                        totalRevenue,
+                        totalCertificates,
+                    },
+                    monthlyRevenue,
+                    topCourses
                 });
             } catch (err) {
                 res.status(500).json({ message: 'Erreur dashboard admin', error: err.message });
