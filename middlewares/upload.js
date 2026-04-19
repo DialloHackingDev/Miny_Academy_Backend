@@ -11,11 +11,12 @@ const storage = multer.diskStorage({
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     
-    // Créer des sous-dossiers selon le type de fichier
+    // Créer des sous-dossiers selon le type de fichier ou le mimetype
     let subDir = 'general';
-    if (file.fieldname === 'pdfFile') {
+    
+    if (file.fieldname === 'pdfFile' || file.mimetype === 'application/pdf' || (file.fieldname.startsWith('lesson_file_') && file.mimetype === 'application/pdf')) {
       subDir = 'pdfs';
-    } else if (file.fieldname === 'videoFile') {
+    } else if (file.fieldname === 'videoFile' || file.mimetype.startsWith('video/') || (file.fieldname.startsWith('lesson_file_') && file.mimetype.startsWith('video/'))) {
       subDir = 'videos';
     } else if (file.fieldname === 'coverImage') {
       subDir = 'covers';
