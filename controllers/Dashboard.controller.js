@@ -2,6 +2,41 @@
 
 // Contrôleur des dashboards
 
+// Helper function to map files to modules/lessons
+const mapFilesToModules = (modules, files) => {
+  if (!modules || !files || files.length === 0) return modules;
+
+  const updatedModules = [...modules];
+
+  files.forEach(file => {
+    // Expected format: lesson_file_mIdx_lIdx
+    if (file.fieldname.startsWith('lesson_file_')) {
+      const parts = file.fieldname.split('_');
+      const mIdx = parseInt(parts[2]);
+      const lIdx = parseInt(parts[3]);
+
+      if (updatedModules[mIdx] && updatedModules[mIdx].lessons[lIdx]) {
+        const lesson = updatedModules[mIdx].lessons[lIdx];
+        const fileData = {
+          filename: file.filename,
+          originalName: file.originalname,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+        };
+
+        if (lesson.type === 'video') {
+          lesson.videoFile = fileData;
+        } else if (lesson.type === 'pdf') {
+          lesson.pdfFile = fileData;
+        }
+      }
+    }
+  });
+
+  return updatedModules;
+};
+
 
     // Dashboard étudiant
    exports.studentDashboard = async (req, res) => {
@@ -205,18 +240,77 @@
         exports.createCourse = async (req, res) => {
             const Course = require('../models/Cours.model');
             try {
-                const { title, description, content, price } = req.body;
-                const newCourse = new Course({
+                const { title, description, category, courseType, price, modules } = req.body;
+
+                // Parse modules if it's a string
+                let parsedModules = modules ? (typeof modules === 'string' ? JSON.parse(modules) : modules) : [];
+
+                // Map lesson files if any
+                if (req.files && req.files.length > 0) {
+                    parsedModules = mapFilesToModules(parsedModules, req.files);
+                }
+
+                // Helper function to map files to modules and lessons
+                function mapFilesToModules(modules, files) {
+                    return modules.map((module, mIdx) => ({
+                        ...module,
+                        lessons: module.lessons.map((lesson, lIdx) => {
+                            const fileKey = `lesson_file_${mIdx}_${lIdx}`;
+                            const file = files.find(f => f.fieldname === fileKey);
+                            
+                            if (file) {
+                                const fileData = {
+                                    filename: file.filename,
+                                    originalName: file.originalname,
+                                    path: file.path,
+                                    size: file.size,
+                                    mimetype: file.mimetype,
+                                };
+                                
+                                // Assign to appropriate file type based on lesson type
+                                if (lesson.type === 'pdf') {
+                                    return { ...lesson, pdfFile: fileData };
+                                } else if (lesson.type === 'video') {
+                                    return { ...lesson, videoFile: fileData };
+                                }
+                            }
+                            
+                            return lesson;
+                        })
+                    }));
+                }
+
+                const courseData = {
                     title,
                     description,
-                    content,
-                    price,
+                    price: parseFloat(price) || 0,
+                    courseType: courseType || 'video',
+                    category: category || 'Autre',
                     professor: req.user._id,
-                    students: []
+                    modules: parsedModules
+                };
+
+                // Handle Root Cover Image
+                const coverFile = req.files?.find(f => f.fieldname === 'coverImage');
+                if (coverFile) {
+                    courseData.coverImage = {
+                        filename: coverFile.filename,
+                        originalName: coverFile.originalname,
+                        path: coverFile.path,
+                        size: coverFile.size,
+                        mimetype: coverFile.mimetype,
+                    };
+                }
+
+                const course = await Course.create(courseData);
+
+                res.status(201).json({
+                    success: true,
+                    message: 'Cours créé avec succès',
+                    data: course
                 });
-                await newCourse.save();
-                res.status(201).json({ message: 'Cours créé', course: newCourse });
             } catch (err) {
+                console.error('CREATE COURSE ERROR:', err);
                 res.status(500).json({ message: 'Erreur création cours', error: err.message });
             }
         }

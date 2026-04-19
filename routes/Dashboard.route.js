@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middlewares/auth');
 const roleCheck = require('../middlewares/roleCheck');
 const dashboardController = require('../controllers/Dashboard.controller');
 const { body, validationResult } = require('express-validator');
+const { uploadCourseFiles } = require('../middlewares/upload');
 
 // Dashboard étudiant
 router.get('/student', authenticateToken, roleCheck('eleve'), dashboardController.studentDashboard);
@@ -54,7 +55,7 @@ router.patch('/admin/user/:id/disable', authenticateToken, roleCheck('admin'), d
 router.delete('/admin/user/:id', authenticateToken, roleCheck('admin'), dashboardController.deleteUser);
 
 // ADMIN : Cours
-router.post('/admin/course', authenticateToken, roleCheck('admin'), dashboardController.createCourse);
+router.post('/admin/course', authenticateToken, roleCheck('admin'), uploadCourseFiles, dashboardController.createCourse);
 router.put('/admin/course/:id', authenticateToken, roleCheck('admin'), dashboardController.updateCourseAdmin);
 router.delete('/admin/course/:id', authenticateToken, roleCheck('admin'), dashboardController.deleteCourseAdmin);
 
