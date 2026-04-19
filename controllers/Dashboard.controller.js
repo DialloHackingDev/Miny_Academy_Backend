@@ -8,18 +8,27 @@
             const userId = req.user._id;
             console.log("verification de l'utilisateur:",userId)
             const Course = require('../models/Cours.model');
+            const Progression = require('../models/Progression.model');
             try {
                 // Récupérer les cours où l'étudiant est inscrit
                 const courses = await Course.find({ students: userId })
-                    .select('title description content price professor coverImage courseType')
+                    .select('title description content price professor coverImage courseType category')
                     .populate('professor', 'username email');
 
-                // Simuler la progression (exemple : 0 à 100%)
-                const progress = courses.map(course => ({
-                    courseId: course._id,
-                    title: course.title,
-                    progression: Math.floor(Math.random() * 101) // à remplacer par vraie progression
-                }));
+                // Récupérer la progression réelle pour chaque cours
+                const progressions = await Progression.find({ userId, courseId: { $in: courses.map(c => c._id) } });
+
+                const progress = courses.map(course => {
+                    const prog = progressions.find(p => String(p.courseId) === String(course._id));
+                    return {
+                        courseId: course._id,
+                        title: course.title,
+                        progression: prog ? prog.progressPercentage : 0,
+                        certificateEarned: prog ? prog.certificateEarned : false,
+                        status: prog ? prog.status : 'not-started',
+                        lastAccessedAt: prog ? prog.lastAccessedAt : null
+                    };
+                });
 
                 res.json({
                     courses,
@@ -34,37 +43,60 @@
     exports.getStudentAnalytics = async (req, res) => {
         const userId = req.user._id;
         const Course = require('../models/Cours.model');
+        const Progression = require('../models/Progression.model');
         try {
             // Récupérer tous les cours de l'étudiant
             const courses = await Course.find({ students: userId })
-                .select('title price students stats');
+                .select('title price category coverImage stats');
+
+            // Récupérer les progressions de l'étudiant
+            const progressions = await Progression.find({ userId, courseId: { $in: courses.map(c => c._id) } });
 
             // Calculer les statistiques globales
             const totalCourses = courses.length;
             const totalSpent = courses.reduce((acc, course) => acc + (course.price || 0), 0);
-            const avgProgress = totalCourses > 0 
-                ? (courses.reduce((acc, c) => acc + (c.stats?.totalViews || 0), 0) / totalCourses).toFixed(1)
-                : 0;
+            
+            // Calculer la progression moyenne (0 si aucun cours)
+            const totalProgress = progressions.reduce((acc, p) => acc + (p.progressPercentage || 0), 0);
+            const avgProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0;
+            
+            // Temps total d'apprentissage (en secondes, converti en minutes/heures côté front)
+            const totalTimeSpentSeconds = progressions.reduce((acc, p) => acc + (p.totalTimeSpent || 0), 0);
+            
+            // Nombre de certificats obtenus
+            const certificatesCount = progressions.filter(p => p.certificateEarned).length;
 
-            // Calculer la note moyenne des cours
-            const coursesWithRating = courses.filter(c => c.stats?.averageRating > 0);
-            const averageRating = coursesWithRating.length > 0
-                ? (coursesWithRating.reduce((acc, c) => acc + c.stats.averageRating, 0) / coursesWithRating.length).toFixed(1)
-                : 0;
+            // Répartition par catégorie pour le graphique circulaire
+            const categoriesCount = {};
+            courses.forEach(c => {
+                const cat = c.category || 'Général';
+                categoriesCount[cat] = (categoriesCount[cat] || 0) + 1;
+            });
+            const categoryDistribution = Object.keys(categoriesCount).map(key => ({
+                name: key,
+                value: categoriesCount[key]
+            }));
 
             res.json({
                 success: true,
                 totalCourses,
                 totalSpent,
                 avgProgress,
-                averageRating,
-                courses: courses.map(c => ({
-                    _id: c._id,
-                    title: c.title,
-                    price: c.price,
-                    rating: c.stats?.averageRating || 0,
-                    views: c.stats?.totalViews || 0
-                }))
+                certificatesCount,
+                totalTimeSpentSeconds,
+                categoryDistribution,
+                courses: courses.map(c => {
+                    const prog = progressions.find(p => String(p.courseId) === String(c._id));
+                    return {
+                        _id: c._id,
+                        title: c.title,
+                        price: c.price,
+                        category: c.category || 'Général',
+                        progress: prog ? prog.progressPercentage : 0,
+                        timeSpent: prog ? prog.totalTimeSpent : 0,
+                        lastAccessed: prog ? prog.lastAccessedAt : null
+                    };
+                })
             });
         } catch (err) {
             res.status(500).json({ success: false, message: 'Erreur analytics étudiant', error: err.message });
