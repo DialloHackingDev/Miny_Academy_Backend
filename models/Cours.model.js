@@ -77,6 +77,11 @@ const CourseSchema = new mongoose.Schema(
         message: 'URL vidéo requise si aucun fichier vidéo n\'est uploadé'
       }
     },
+    // Vidéo de présentation du cours (aperçu public)
+    previewVideoUrl: {
+      type: String,
+      default: ''
+    },
     price: {
       type: Number,
       default: 0, // gratuit si 0

@@ -240,7 +240,7 @@ const mapFilesToModules = (modules, files) => {
         exports.createCourse = async (req, res) => {
             const Course = require('../models/Cours.model');
             try {
-                const { title, description, category, courseType, price, modules } = req.body;
+                const { title, description, category, courseType, price, previewVideoUrl, modules } = req.body;
 
                 // Parse modules if it's a string
                 let parsedModules = modules ? (typeof modules === 'string' ? JSON.parse(modules) : modules) : [];
@@ -289,6 +289,11 @@ const mapFilesToModules = (modules, files) => {
                     professor: req.user._id,
                     modules: parsedModules
                 };
+
+                // Add preview video URL if provided
+                if (previewVideoUrl && previewVideoUrl.trim()) {
+                    courseData.previewVideoUrl = previewVideoUrl.trim();
+                }
 
                 // Handle Root Cover Image
                 const coverFile = req.files?.find(f => f.fieldname === 'coverImage');
