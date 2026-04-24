@@ -228,3 +228,62 @@ exports.getCourseStats = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// 🔹 Toggle Favorite (Like/Unlike)
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ success: false, message: "Cours non trouvé" });
+
+    const userId = req.user._id;
+    const isFavored = course.lovers.includes(userId);
+
+    if (isFavored) {
+      // Remove from favorites
+      course.lovers = course.lovers.filter(id => !id.equals(userId));
+    } else {
+      // Add to favorites
+      course.lovers.push(userId);
+    }
+
+    await course.save();
+    res.json({ 
+      success: true, 
+      message: isFavored ? "Removed from favorites" : "Added to favorites",
+      isFavored: !isFavored,
+      favoritesCount: course.lovers.length
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 🔹 Get User Favorites
+exports.getUserFavorites = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const courses = await Course.find({ lovers: userId }).populate("professor", "username email role");
+    res.json({ success: true, data: courses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 🔹 Check if Course is Favored
+exports.checkIsFavored = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ success: false, message: "Cours non trouvé" });
+
+    const userId = req.user._id;
+    const isFavored = course.lovers.includes(userId);
+
+    res.json({ 
+      success: true, 
+      isFavored,
+      favoritesCount: course.lovers.length
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

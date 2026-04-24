@@ -148,6 +148,13 @@ const CourseSchema = new mongoose.Schema(
         isFree: { type: Boolean, default: false }, // Leçon gratuite (aperçu)
       }]
     }],
+    // Favoris (utilisateurs qui ont aimé ce cours)
+    lovers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ]
   },
   { timestamps: true }
 );

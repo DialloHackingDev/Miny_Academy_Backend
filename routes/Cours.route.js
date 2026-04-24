@@ -175,4 +175,47 @@ router.get(
 	coursControllers.getCourseStats
 )
 
+// 🔹 Get User Favorites (MUST come before /:id routes)
+router.get(
+	"/user/favorites/list",
+	authenticateToken,
+	coursControllers.getUserFavorites
+)
+
+// 🔹 Toggle Favorite (Like/Unlike)
+router.post(
+	"/:id/favorite",
+	authenticateToken,
+	[
+		param('id').isMongoId().withMessage('ID du cours invalide')
+	],
+	(req, res, next) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		next();
+	},
+	coursControllers.toggleFavorite
+)
+
+// 🔹 Check if Course is Favored
+router.get(
+	"/:id/favorite/check",
+	authenticateToken,
+	[
+		param('id').isMongoId().withMessage('ID du cours invalide')
+	],
+	(req, res, next) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		next();
+	},
+	coursControllers.checkIsFavored
+)
+
+module.exports = router;
+
 module.exports = router;
