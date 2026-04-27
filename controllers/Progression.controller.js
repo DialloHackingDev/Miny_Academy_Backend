@@ -328,5 +328,32 @@ module.exports = {
                 msg: "Erreur lors de la réinitialisation"
             });
         }
+    },
+    
+    // ✅ Public verification of certificate
+    verifyPublicCertificate: async (req, res) => {
+        try {
+            const { courseId, userId } = req.params;
+            
+            const progression = await Progression.findOne({ userId, courseId });
+            if (!progression || !progression.certificateEarned) {
+                return res.status(404).json({ success: false, msg: "Certificat non trouvé ou non valide" });
+            }
+            
+            const course = await Course.findById(courseId).select('title');
+            
+            return res.status(200).json({
+                success: true,
+                data: {
+                    courseTitle: course?.title,
+                    progressPercentage: progression.progressPercentage,
+                    certificateEarnedAt: progression.certificateEarnedAt,
+                    status: progression.status
+                }
+            });
+        } catch (error) {
+            console.error("Erreur verifyPublicCertificate:", error);
+            return res.status(500).json({ success: false, msg: "Erreur serveur lors de la vérification" });
+        }
     }
 };

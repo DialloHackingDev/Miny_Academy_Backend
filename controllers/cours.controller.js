@@ -236,14 +236,16 @@ exports.toggleFavorite = async (req, res) => {
     if (!course) return res.status(404).json({ success: false, message: "Cours non trouvé" });
 
     const userId = req.user._id;
-    const isFavored = course.lovers.includes(userId);
+    const isFavored = course.lovers.some(id => id.toString() === userId.toString());
 
     if (isFavored) {
       // Remove from favorites
-      course.lovers = course.lovers.filter(id => !id.equals(userId));
+      course.lovers = course.lovers.filter(id => id.toString() !== userId.toString());
     } else {
       // Add to favorites
-      course.lovers.push(userId);
+      if (!course.lovers.some(id => id.toString() === userId.toString())) {
+        course.lovers.push(userId);
+      }
     }
 
     await course.save();
@@ -276,7 +278,7 @@ exports.checkIsFavored = async (req, res) => {
     if (!course) return res.status(404).json({ success: false, message: "Cours non trouvé" });
 
     const userId = req.user._id;
-    const isFavored = course.lovers.includes(userId);
+    const isFavored = course.lovers.some(id => id.toString() === userId.toString());
 
     res.json({ 
       success: true, 

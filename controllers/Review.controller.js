@@ -33,5 +33,30 @@ module.exports = {
         } catch (err) {
             res.status(500).json({ message: 'Erreur récupération avis', error: err.message });
         }
+    },
+
+    // Voir mes propres avis
+    getMyReviews: async (req, res) => {
+        const userId = req.user._id;
+        try {
+            const reviews = await Review.find({ userId }).populate('courseId', 'title coverImage');
+            res.json({ success: true, reviews });
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Erreur récupération mes avis', error: err.message });
+        }
+    },
+
+    // Voir les avis récents (pour la page d'accueil)
+    getPlatformReviews: async (req, res) => {
+        try {
+            const reviews = await Review.find()
+                .sort({ date: -1 })
+                .limit(6)
+                .populate('userId', 'username profileImage')
+                .populate('courseId', 'title');
+            res.json({ success: true, reviews });
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Erreur récupération avis plateforme', error: err.message });
+        }
     }
 };

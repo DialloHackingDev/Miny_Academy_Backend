@@ -9,8 +9,11 @@ const progressionRoute = require("./routes/Progression.route");
 const reviewRoute = require("./routes/Review.route");
 const purchaseRoute = require("./routes/Purchase.route");
 const notificationRoute = require("./routes/Notification.route");
+const qaRoute = require("./routes/QA.route");
+const noteRoute = require("./routes/Note.route");
 const cartRoute = require("./routes/Cart.route");
 const profileRoute = require("./routes/Profile.route");
+const platformReviewRoute = require("./routes/PlatformReview.route");
 const helmet = require("helmet");
 const cors = require("cors");
 const cookie = require("cookie-parser")
@@ -24,12 +27,7 @@ const PORT = process.env.PORT || 5000;
 
 
 
-// Middleware de logging personnalisé (avant tout)
-app.use((req, res, next) => {
-    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    next();
-});
+
 
 //les middlewares
 app.use(express.json())
@@ -78,8 +76,11 @@ app.use("/api/progress", progressionRoute);
 app.use("/api/reviews", reviewRoute);
 app.use("/api/purchase", purchaseRoute);
 app.use("/api/notifications", notificationRoute);
+app.use("/api/qa", qaRoute);
+app.use("/api/notes", noteRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/users/profile", profileRoute);
+app.use("/api/platform-reviews", platformReviewRoute);
 
 
 

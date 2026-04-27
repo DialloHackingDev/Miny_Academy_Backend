@@ -146,7 +146,7 @@ const mapFilesToModules = (modules, files) => {
             try {
                 // Récupérer les cours créés par le professeur
                 const courses = await Course.find({ professor: teacherId })
-                    .select('title description content price students');
+                    .select('title description content price students coverImage category');
 
                 // Pour chaque cours, récupérer les étudiants inscrits
                 const coursesWithStudents = await Promise.all(courses.map(async course => {

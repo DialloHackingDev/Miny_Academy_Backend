@@ -28,4 +28,10 @@ router.post(
 // Voir tous les avis d'un cours
 router.get('/:courseId', reviewController.getCourseReviews);
 
+// Voir les avis récents de la plateforme (Public)
+router.get('/platform/recent', reviewController.getPlatformReviews);
+
+// Voir mes propres avis
+router.get('/my/reviews', authenticateToken, reviewController.getMyReviews);
+
 module.exports = router;

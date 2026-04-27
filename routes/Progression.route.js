@@ -69,4 +69,10 @@ router.delete(
     progressionController.resetProgression
 );
 
+// ✅ Vérification publique de certificat (SANS TOKEN)
+router.get(
+    '/verify/:courseId/:userId',
+    progressionController.verifyPublicCertificate
+);
+
 module.exports = router;
